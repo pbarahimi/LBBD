@@ -348,7 +348,6 @@ public class LBBDMain {
 					for (int k = 0; k < nVar; k++) {
 						for (int r = 0; r <= Math.pow(2, D) - 2; r++) {
 							GRBLinExpr con10 = new GRBLinExpr();
-							System.out.println("r: " + r + ", D: " + D);
 							for (int s : BinaryTree.getLeftChildren(r, D)) {
 								for (int m = 0; m < nVar; m++) {
 									tot += 1;
@@ -395,13 +394,16 @@ public class LBBDMain {
 			}
 
 			// Optimize model
+			model.getEnv().set(GRB.IntParam.OutputFlag, 0);
+			double startTime = System.currentTimeMillis();
 			BB bbModel = new BB(model);
 			bbModel.run();
+			double endTime = System.currentTimeMillis();
+			System.out.println("Elapsed time: " + (endTime - startTime));
 
 		} catch (GRBException e) {
 			System.out.println("Error code: " + e.getErrorCode() + ". "
 					+ e.getMessage());
 		}
 	}
-
 }

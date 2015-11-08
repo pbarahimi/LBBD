@@ -32,14 +32,15 @@ public class BB {
 
 	public List<BBNode> run() throws GRBException{
 		BBNode root = new BBNode(0, model);
-		root.solve();
-		unexploredNodes.add(root);
 		
 		//initializing bestObj
 		if (root.getModel().get(GRB.IntAttr.ModelSense) == 1)
 			this.bestObj = 1 * GRB.INFINITY;
 		else 
 			this.bestObj = -1 * GRB.INFINITY;
+				
+		root.solve();
+		unexploredNodes.add(root);
 		
 		//branch and bound
 		while (!unexploredNodes.isEmpty()){
@@ -71,6 +72,7 @@ public class BB {
 				childNodeRight.getModel().addConstr(expr, GRB.GREATER_EQUAL, 0, "IntConst" + cnt++);
 				childNodeRight.solve();
 				unexploredNodes.add(childNodeRight);
+				node.disposeModel();
 			}
 		}
 		System.out.println("The BB obj: " + bestObj);

@@ -62,7 +62,7 @@ public class BBNode implements Comparable<BBNode>{
 	 * @throws GRBException
 	 */
 	public boolean isIntegral() throws GRBException{
-		for (GRBVar var:model.getVars()){
+		for (GRBVar var:this.vars){
 			if (var.get(GRB.DoubleAttr.X)%1 != 0) return false;
 		}
 		return true;
@@ -74,12 +74,19 @@ public class BBNode implements Comparable<BBNode>{
 	 * @throws GRBException
 	 */
 	public GRBVar getNonintVar() throws GRBException{
-		for (GRBVar var:model.getVars()){
+		for (GRBVar var:this.vars){
 			if (var.get(GRB.DoubleAttr.X)%1 != 0){
 				System.out.println("Nonintegral variable is: " + var.get(GRB.StringAttr.VarName));
 				return var;
 			}
 		}
 		return null;
+	}
+	
+	/**
+	 * Disposes the model to free memory
+	 */
+	public void disposeModel(){
+		this.model = null;
 	}
 }
