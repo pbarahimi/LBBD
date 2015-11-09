@@ -1,15 +1,18 @@
 
-
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import gurobi.*;
 
 public class BBNode implements Comparable<BBNode>{
 	private int index;
 	private double obj;
+	private boolean isIntegral = true;
 	private int status;
 	private GRBModel model;
-	private GRBVar[] vars;
+	private Set<GRBVar> J0 = new HashSet<GRBVar>();
+	private Set<GRBVar> J1 = new HashSet<GRBVar>();
+//	private HashMap<String,Double> vars = new HashMap<String,Double>();
 	
 	// comparator
 	@Override
@@ -18,11 +21,14 @@ public class BBNode implements Comparable<BBNode>{
 	}
 	
 	// getters
-	public GRBVar[] getVars(){return this.vars;}	
+//	public HashMap<String,Double> getVars(){return this.vars;}	
 	public int getIndex(){return this.index;}	
 	public double getObj(){return this.obj;}
 	public GRBModel getModel(){return this.model;}
 	public int getStatus(){return this.status;}
+	public boolean isIntegral(){return this.isIntegral;}
+	public Set<GRBVar> getJ0(){return this.J0;}
+	public Set<GRBVar> getJ1(){return this.J1;}
 	
 	// setter
 	public void setIndex(int i){this.index=i;}
@@ -30,14 +36,21 @@ public class BBNode implements Comparable<BBNode>{
 	public void setStatus(int i){this.status = i;}
 	public void setModel(GRBModel model){this.model = model;}
 	
-	// constructor
+	// constructors
 	public BBNode(int index, GRBModel model){
 		this.index = index;
 		this.model = model;
 	}
 	
+	public BBNode(int index, GRBModel model, Set<GRBVar> J0, Set<GRBVar> J1){
+		this.index = index;
+		this.model = model;
+		this.J0 = J0;
+		this.J1 = J1;
+	}
+	
 	BBNode(BBNode other){
-		this(other.index, other.model);
+		this(other.index, other.model, other.J0, other.J1);
 	}
 	
 	// solves the model and updates obj and status.
@@ -46,7 +59,10 @@ public class BBNode implements Comparable<BBNode>{
 		this.status = model.get(GRB.IntAttr.Status);
 		if (this.status != 3){
 			this.obj = model.get(GRB.DoubleAttr.ObjVal);
-			this.vars = model.getVars();
+			for (GRBVar var:model.getVars()){
+				if (var.get(GRB.DoubleAttr.X)%1!=0) {this.isIntegral=false;continue;}
+				//this.vars.put(var.get(GRB.StringAttr.VarName), var.get(GRB.DoubleAttr.X));
+			}
 		}
 		/*
 		if (this.getStatus()==2){
@@ -61,12 +77,12 @@ public class BBNode implements Comparable<BBNode>{
 	 * @return bool
 	 * @throws GRBException
 	 */
-	public boolean isIntegral() throws GRBException{
-		for (GRBVar var:this.vars){
-			if (var.get(GRB.DoubleAttr.X)%1 != 0) return false;
+/*	public boolean isIntegral() throws GRBException{
+		for (double var:this.vars.values()){
+			if (var%1 != 0) return false;
 		}
 		return true;
-	}
+	}*/
 
 	/**
 	 * Returns the first GRBVar with nonintegral value
@@ -74,12 +90,12 @@ public class BBNode implements Comparable<BBNode>{
 	 * @throws GRBException
 	 */
 	public GRBVar getNonintVar() throws GRBException{
-		for (GRBVar var:this.vars){
+		for (GRBVar var:this.model.getVars()){
 			if (var.get(GRB.DoubleAttr.X)%1 != 0){
-				System.out.println("Nonintegral variable is: " + var.get(GRB.StringAttr.VarName));
+//				System.out.println("Nonintegral: " + var.get(GRB.StringAttr.VarName));
 				return var;
 			}
-		}
+		}model.remove(model.getConstrByName("y1"));
 		return null;
 	}
 	
